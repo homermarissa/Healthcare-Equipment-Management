@@ -36,3 +36,15 @@ This project is a full-stack application built with Vue.js and Node.js designed 
    # Backend
    node server.js
    ```
+   
+## Database Setup
+
+1. Create a new MySQL database:
+   ```sql
+   CREATE DATABASE healthcare_app;
+   ```
+
+2. Import the database structure:
+   ```bash
+   mysql -u root -p healthcare_app < database/healthcare_app_backup.sql
+   ```
