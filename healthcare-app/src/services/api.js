@@ -12,7 +12,8 @@ export const equipment = {
   getAll: () => apiClient.get('/equipment'),
   create: (data) => apiClient.post('/equipment', data),
   update: (id, data) => apiClient.put(`/equipment/${id}`, data),
-  delete: (id) => apiClient.delete(`/equipment/${id}`)
+  delete: (id) => apiClient.delete(`/equipment/${id}`),
+  updateStatus: (id, status) => apiClient.put(`/equipment/${id}/status`, { status })
 };
 
 // Maintenance endpoints
@@ -36,6 +37,7 @@ export default {
   createEquipment: equipment.create,
   updateEquipment: equipment.update,
   deleteEquipment: equipment.delete,
+  updateEquipmentStatus: equipment.updateStatus, 
   getMaintenanceSchedule: maintenance.getSchedule,
   deleteMaintenanceSchedule: maintenance.delete,
   getMaintenanceHistory: maintenance.getHistory,
@@ -43,5 +45,6 @@ export default {
   scheduleAllMaintenance: maintenance.scheduleAll,
   scheduleMaintenance: maintenance.schedule,
   updateMaintenanceScheduleStatus: maintenance.updateStatus,
-  completeMaintenance: maintenance.complete
+  completeMaintenance: maintenance.complete,
+  addEquipment: equipment.create
 };

@@ -515,6 +515,59 @@ const maintenanceController = {
 app.delete('/api/maintenance-schedule/:id', maintenanceController.deleteMaintenanceSchedule);
 app.delete('/api/equipment/:id', maintenanceController.deleteEquipment);
 
+// Add this new endpoint for updating equipment status
+app.put('/api/equipment/:id/status', (req, res) => {
+  const { status } = req.body;
+  const equipmentId = req.params.id;
+  
+  console.log('Updating equipment status:', { equipmentId, status });
+
+  db.beginTransaction(async (err) => {
+    if (err) {
+      console.error('Transaction error:', err);
+      return res.status(500).json({ error: err.message });
+    }
+
+    try {
+      // Update equipment status
+      const [updateResult] = await db.promise().query(
+        'UPDATE equipment SET status = ? WHERE id = ?',
+        [status, equipmentId]
+      );
+      console.log('Equipment status updated:', updateResult);
+
+      // If status is 'Maintenance', create a maintenance schedule
+      if (status === 'Maintenance') {
+        const [scheduleResult] = await db.promise().query(
+          `INSERT INTO maintenance_schedule 
+           (equipment_id, scheduled_date, status, type, notes)
+           VALUES (?, CURDATE(), 'In Progress', 'Regular Maintenance', 'Unscheduled maintenance')`,
+          [equipmentId]
+        );
+        console.log('Maintenance schedule created:', scheduleResult);
+      }
+
+      db.commit((err) => {
+        if (err) {
+          return db.rollback(() => {
+            res.status(500).json({ error: err.message });
+          });
+        }
+        res.json({ 
+          message: 'Equipment status updated successfully',
+          status: status
+        });
+      });
+
+    } catch (error) {
+      return db.rollback(() => {
+        console.error('Error:', error);
+        res.status(500).json({ error: error.message });
+      });
+    }
+  });
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
