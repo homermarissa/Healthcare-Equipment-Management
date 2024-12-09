@@ -311,6 +311,66 @@
         </div>
       </div>
     </div>
+
+    <!-- Edit Modal -->
+    <div v-if="showEditModal" class="modal" @click.self="cancelEdit">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Edit Equipment</h3>
+          <button @click="cancelEdit" class="close-button">×</button>
+        </div>
+
+        <div class="modal-body">
+          <form @submit.prevent="saveEquipment" class="edit-form">
+            <div class="form-group">
+              <label>Name</label>
+              <input v-model="editingEquipment.name" required />
+            </div>
+
+            <div class="form-group">
+              <label>Category</label>
+              <select v-model="editingEquipment.category_id" required>
+                <option v-for="category in categories" 
+                        :key="category.id" 
+                        :value="category.id">
+                  {{ category.name }}
+                </option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Serial Number</label>
+              <input v-model="editingEquipment.serial_number" />
+            </div>
+
+            <div class="form-group">
+              <label>Location</label>
+              <input v-model="editingEquipment.location" />
+            </div>
+
+            <div class="form-group">
+              <label>Purchase Date</label>
+              <input type="date" 
+                     v-model="editingEquipment.purchase_date" />
+            </div>
+
+            <div class="form-group">
+              <label>Notes</label>
+              <textarea v-model="editingEquipment.notes"></textarea>
+            </div>
+
+            <div class="modal-footer">
+              <button type="button" @click="cancelEdit" class="cancel-button">
+                Cancel
+              </button>
+              <button type="submit" class="save-button">
+                Save Changes
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -337,7 +397,9 @@ export default {
         purchase_date: '',
         notes: '',
         status: 'Available'
-      }
+      },
+      showEditModal: false,
+      editingEquipment: null,
     };
   },
 
@@ -527,8 +589,39 @@ export default {
     },
 
     editEquipment() {
-      // TODO: Implement edit functionality
-      console.log('Edit equipment:', this.selectedEquipment);
+      console.log('Edit button clicked');
+      console.log('Selected equipment:', this.selectedEquipment);
+      this.editingEquipment = { ...this.selectedEquipment };
+      console.log('Editing equipment:', this.editingEquipment);
+      this.showEditModal = true;
+      this.closeModal(); // Close the details modal
+    },
+
+    async saveEquipment() {
+      try {
+        // Validate date format if purchase_date exists
+        if (this.editingEquipment.purchase_date) {
+          const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+          if (!dateRegex.test(this.editingEquipment.purchase_date)) {
+            alert('Please check if the purchase date is in the correct format (YYYY-MM-DD)');
+            return;
+          }
+        }
+
+        await api.updateEquipment(this.editingEquipment.id, this.editingEquipment);
+        await this.fetchEquipment();
+        this.showEditModal = false;
+        this.editingEquipment = null;
+        alert('Equipment updated successfully!');
+      } catch (error) {
+        console.error('Error updating equipment:', error);
+        alert('Please check if all fields are filled out correctly. Make sure dates are in the correct format (YYYY-MM-DD).');
+      }
+    },
+
+    cancelEdit() {
+      this.showEditModal = false;
+      this.editingEquipment = null;
     },
 
     async deleteEquipment() {
@@ -1061,5 +1154,62 @@ export default {
 .no-results i {
   font-size: 2em;
   opacity: 0.5;
+}
+
+.edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 10px;
+  border: 2px solid #e9ecef;
+  border-radius: 6px;
+  font-size: 1em;
+}
+
+.form-group textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.save-button {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.cancel-button {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
 }
 </style>
